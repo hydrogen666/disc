@@ -1,15 +1,6 @@
-# umi project
-
-## Getting Started
-
-Install dependencies,
-
+# DISC personality test
+build
 ```bash
-$ yarn
+npm run build
 ```
 
-Start the dev server,
-
-```bash
-$ yarn start
-```
