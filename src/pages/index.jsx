@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './index.less';
 
-import { Divider, Radio, Space, Button } from 'antd';
+import { Divider, Radio, Space, Button, Modal, Table } from 'antd';
 
 const questions = [
   {
@@ -848,6 +848,102 @@ const questions = [
 
 export default class IndexPage extends React.Component {
 
+  constructor(props) {
+    super(props);
+    this.state = {
+      userAnswers: [],
+      showNotDone: false,
+    };
+  }
+
+  onOptionChange = (value, index) => {
+    const userAnswers = [...this.state.userAnswers];
+    userAnswers[index] = value;
+    this.setState({
+      userAnswers
+    })
+  }
+
+  validate = (userAnswers) => {
+    if (userAnswers.length < 40) {
+      return false;
+    }
+    for (let answer of userAnswers) {
+      if (!answer) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  calculate = (userAnswers) => {
+    const result = {
+      'D': 0,
+      'I': 0,
+      'S': 0,
+      'C': 0,
+    };
+    for (let answer of userAnswers) {
+      result[answer]++;
+    }
+    return result;
+  }
+
+  onSubmit = () => {
+    const { userAnswers } = this.state;
+    if (!this.validate(userAnswers)) {
+      this.setState({
+        showNotDone: true,
+      })
+      Modal.error({
+        title: '再看一下？',
+        content: '题还没做完呢亲',
+      });
+    } else {
+      const result = this.calculate(userAnswers);
+      const modal = Modal.info({
+        title: '结果计算中...',
+        content: '',
+      });
+      setTimeout(() => {
+        modal.update({
+          title: '您的测试结果',
+          content: <Table
+            pagination={false}
+            bordered
+            dataSource={[{
+              ...result,
+              key: 1
+            }]}
+            columns={[
+              {
+                title: 'D',
+                dataIndex: 'D',
+                key: 'D',
+              },
+              {
+                title: 'I',
+                dataIndex: 'I',
+                key: 'I',
+              },
+              {
+                title: 'S',
+                dataIndex: 'S',
+                key: 'S',
+              },
+              {
+                title: 'C',
+                dataIndex: 'C',
+                key: 'C',
+              },
+            ]}
+          />
+        })
+      }, 1000)
+    }
+  }
+
+
   render() {
     return (
       <div className={styles.main}>
@@ -855,9 +951,17 @@ export default class IndexPage extends React.Component {
           questions.map((oneQuestion, index) => {
             const { question, answers } = oneQuestion;
             return (
-              <div key={question}>
+              <div
+                key={question}
+              >
                 <p>{question}</p>
-                <Radio.Group>
+                <Radio.Group
+                   className={this.state.userAnswers[index] ? styles['answer-done'] : (this.state.showNotDone ? styles['answer-not-done-highlight'] : styles['answer-not-done'])}
+                  value={this.state.userAnswers[index]}
+                  onChange={(e) => {
+                    this.onOptionChange(e.target.value, index);
+                  }}
+                >
                   <Space direction="vertical">
                     {
                       answers.map((oneAnswer) => {
@@ -879,7 +983,7 @@ export default class IndexPage extends React.Component {
             )
           })
         }
-        <Button type="primary">
+        <Button type="primary" onClick={this.onSubmit}>
           提交
         </Button>
       </div>
